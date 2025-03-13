@@ -1,0 +1,21 @@
+{
+	layer4 {
+		:80 {
+			route {
+				proxy {$UPSTREAM}:80 {
+					proxy_protocol v2
+				}
+			}
+		}
+		:443 {
+			route {
+				proxy {$UPSTREAM}:443 {
+					proxy_protocol v2
+				}
+			}
+		}
+	}
+	log {
+		format console
+	}
+}
