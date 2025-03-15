@@ -1,36 +1,43 @@
-name: tailnet-proxy
-
 services:
   caddy:
     build: .
+    container_name: caddy
     restart: unless-stopped
     environment:
-      - UPSTREAM=${UPSTREAM}
+      - UPSTREAM=${UPSTREAM:-10.13.13.2}
     volumes:
       - config:/config
       - data:/data
-    network_mode: service:tailscale
+    network_mode: service:wireguard
 
-  tailscale:
-    image: tailscale/tailscale
+  wireguard:
+    image: linuxserver/wireguard
+    container_name: wireguard
     restart: unless-stopped
-    hostname: tailnet-proxy
     ports:
       - 80:80
       - 443:443
+      - ${WG_SERVER_PORT:-51820}:51820/udp
     environment:
-      - TS_ACCEPT_DNS=true
-      - TS_AUTHKEY=${TS_AUTHKEY}
-      - TS_STATE_DIR=/var/lib/tailscale
-      - TS_USERSPACE=false
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - SERVERURL=${WG_SERVER_URL:-auto}
+      - SERVERPORT=${WG_SERVER_PORT:-51820}
+      - INTERNAL_SUBNET=${WG_SUBNET:-10.13.13.0}
+      - ALLOWEDIPS=${WG_ALLOWED_IPS:-10.13.13.1}
+      - PEERS=${WG_PEER_COUNT:-1}
+      - LOG_CONFS=false
     volumes:
-      - tailscale:/var/lib/tailscale
-    devices:
-      - /dev/net/tun
+      - wireguard:/config
+      - /lib/modules
     cap_add:
-      - net_admin
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
 
 volumes:
   config:
   data:
-  tailscale:
+  wireguard:
