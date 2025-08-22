@@ -1,6 +1,6 @@
 services:
   caddy:
-    build: .
+    image: ghcr.io/aviv926/caddy-wireguard-proxy:latest
     container_name: caddy
     restart: unless-stopped
     environment:
